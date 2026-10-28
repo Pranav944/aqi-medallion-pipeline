@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Airflow runtime files
+airflow/logs/
+airflow/*.db
+airflow/airflow.cfg
+airflow/*.generated
+airflow/*.db-*
