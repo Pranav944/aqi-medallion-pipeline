@@ -7,23 +7,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from airflow.sdk import dag, task  # noqa: E402
+from src.callbacks import notify_failure  # noqa: E402
 from src.extract import CITIES, extract_to_bronze  # noqa: E402
 from src.load_silver import load_silver  # noqa: E402
 from src.quality import run_quality_checks  # noqa: E402
-
-
-def notify_failure(context):
-    """Failure callback: append a line to data/failures.log."""
-    ti = context.get("task_instance") or context.get("ti")
-    line = (
-        f"{datetime.utcnow().isoformat()} FAILED "
-        f"dag={getattr(ti, 'dag_id', '?')} task={getattr(ti, 'task_id', '?')} "
-        f"run={context.get('run_id', '?')}\n"
-    )
-    log_path = PROJECT_ROOT / "data" / "failures.log"
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(log_path, "a") as f:
-        f.write(line)
 
 
 @dag(
