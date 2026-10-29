@@ -5,8 +5,9 @@ from pathlib import Path
 
 import duckdb
 
-BRONZE_DIR = Path("data/bronze")
-DB_PATH = "data/warehouse.duckdb"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+BRONZE_DIR = PROJECT_ROOT / "data" / "bronze"
+DB_PATH = str(PROJECT_ROOT / "data" / "warehouse.duckdb")
 
 
 def read_bronze(ds: str) -> list[tuple]:

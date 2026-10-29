@@ -1,11 +1,13 @@
 import json
 import sys
+import time
 from pathlib import Path
+
 import requests
 
 API_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
-BRONZE_DIR = Path("data/bronze")
-
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+BRONZE_DIR = PROJECT_ROOT / "data" / "bronze"
 
 CITIES = [
     {"name": "Bengaluru", "lat": 12.97, "lon": 77.59},
@@ -19,8 +21,11 @@ CITIES = [
 ]
 
 
-def fetch_city(city: dict,ds: str)->dict:
-    """Call the API for one city and one date (ds = 'YYYY-MM-DD')."""
+def fetch_city(city: dict, ds: str, attempts: int = 4) -> dict:
+    """Call the API for one city and one date (ds = 'YYYY-MM-DD').
+
+    Retries with exponential backoff (2s, 4s, 8s) on network errors.
+    """
     params = {
         "latitude": city["lat"],
         "longitude": city["lon"],
@@ -28,9 +33,18 @@ def fetch_city(city: dict,ds: str)->dict:
         "start_date": ds,
         "end_date": ds,
     }
-    response = requests.get(API_URL, params=params, timeout=30)
-    response.raise_for_status()
-    return response.json()
+    for attempt in range(1, attempts + 1):
+        try:
+            response = requests.get(API_URL, params=params, timeout=(5, 20))
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as exc:
+            if attempt == attempts:
+                raise
+            wait = 2 ** attempt
+            print(f"{city['name']} {ds}: {type(exc).__name__}, retry {attempt} in {wait}s", file=sys.stderr)
+            time.sleep(wait)
+
 
 def save_bronze(city_name: str, ds: str, payload: dict) -> Path:
     """Write the raw JSON to data/bronze/ds=<date>/<city>.json (overwrites)."""
@@ -39,10 +53,12 @@ def save_bronze(city_name: str, ds: str, payload: dict) -> Path:
     out.write_text(json.dumps(payload))
     return out
 
+
 def extract_to_bronze(city: dict, ds: str) -> str:
     payload = fetch_city(city, ds)
     path = save_bronze(city["name"], ds, payload)
     return str(path)
+
 
 if __name__ == "__main__":
     ds = sys.argv[1]
