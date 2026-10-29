@@ -225,3 +225,8 @@ airflow/*.db
 airflow/airflow.cfg
 airflow/*.generated
 airflow/*.db-*
+
+# Pipeline data
+data/
+*.duckdb
+*.duckdb.wal
