@@ -230,3 +230,4 @@ airflow/*.db-*
 data/
 *.duckdb
 *.duckdb.wal
+.venv-dbt/

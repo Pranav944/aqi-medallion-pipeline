@@ -1,0 +1,4 @@
+# Install Airflow with the official constraints file (see README)
+apache-airflow==3.3.0
+duckdb==2.0.0
+requests==2.34.2

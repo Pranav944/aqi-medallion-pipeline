@@ -7,6 +7,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from airflow.sdk import dag, task  # noqa: E402
+from airflow.timetables.interval import CronDataIntervalTimetable  # noqa: E402
 from src.callbacks import notify_failure  # noqa: E402
 from src.extract import CITIES, extract_to_bronze  # noqa: E402
 from src.load_silver import load_silver  # noqa: E402
@@ -15,7 +16,7 @@ from src.quality import run_quality_checks  # noqa: E402
 
 @dag(
     dag_id="aqi_medallion",
-    schedule="@daily",
+    schedule=CronDataIntervalTimetable("0 0 * * *", timezone="UTC"),
     start_date=datetime(2026, 9, 29),
     catchup=False,
     max_active_runs=1,
@@ -55,3 +56,4 @@ def aqi_medallion():
 
 
 aqi_medallion()
+ 
